@@ -52,11 +52,11 @@ for obs in observations:
     if not viewer.is_alive:
         break
 
-    # 1️⃣ 관절 상태 업데이트 (degree → radian 변환)
+    # 관절 상태 업데이트 (degree → radian 변환)
     data.qpos[:] = np.radians(obs[:6])  
     mujoco.mj_forward(model, data)  # 물리 엔진 상태 업데이트
 
-    # 2️⃣ 각 축의 위치 얻기 (base 제외한 6개 조인트)
+    # 각 축의 위치 얻기 (base 제외한 6개 조인트)
     joint_names = ["Rotation_Pitch", "Upper_Arm", "Lower_Arm", "Wrist_Pitch_Roll", "Fixed_Jaw", "Moving_Jaw"]
     joint_positions = [data.xpos[model.body(joint).id] for joint in joint_names]
 
