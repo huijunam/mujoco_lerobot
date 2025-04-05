@@ -46,20 +46,32 @@ observations = np.array([row['observation.state'] for row in last_episode_data])
 model = mujoco.MjModel.from_xml_path('../mujoco_menagerie/trs_so_arm100/scene.xml')
 data = mujoco.MjData(model)
 
-viewer = mujoco_viewer.MujocoViewer(model, data)
+joint_names = ["Rotation", "Pitch", "Elbow", "Wrist_Pitch", "Wrist_Roll", "Jaw"]
+invert_indices = [1, 4]
 
+viewer = mujoco_viewer.MujocoViewer(model, data)
+    
 for obs in observations:
     if not viewer.is_alive:
         break
-
-    # 관절 상태 업데이트 (degree → radian 변환)
-    data.qpos[:] = np.radians(obs[:6])  
+    
+    obs_deg = np.array(obs[:6])
+    
+    # # 관절 상태 업데이트 (degree → radian 변환)
+    # data.qpos[:] = np.radians(obs[:6])  
+    obs_deg[invert_indices] *= -1
+    data.qpos[:] = np.radians(obs_deg)
+    
     mujoco.mj_forward(model, data)  # 물리 엔진 상태 업데이트
 
-    # 각 축의 위치 얻기 (base 제외한 6개 조인트)
-    joint_names = ["Rotation_Pitch", "Upper_Arm", "Lower_Arm", "Wrist_Pitch_Roll", "Fixed_Jaw", "Moving_Jaw"]
-    joint_positions = [data.xpos[model.body(joint).id] for joint in joint_names]
+    # # 각 축의 위치 얻기 (base 제외한 6개 조인트)
+    # joint_positions = [data.xpos[model.body(joint).id] for joint in joint_names]
 
+    # 각 조인트 값 표시용 텍스트 생성
+    joint_text = "\n".join([
+        f"{name}: {obs[i]:.2f}°" for i, name in enumerate(joint_names)
+    ])
+    
     viewer.render()  # 화면 렌더링
 
 viewer.close()
